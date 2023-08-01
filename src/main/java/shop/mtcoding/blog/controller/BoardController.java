@@ -1,5 +1,7 @@
 package shop.mtcoding.blog.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -8,8 +10,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import shop.mtcoding.blog.dto.WriteDTO;
+import shop.mtcoding.blog.model.Board;
 import shop.mtcoding.blog.model.User;
 import shop.mtcoding.blog.repository.BoardRepository;
 
@@ -22,8 +26,22 @@ public class BoardController {
     @Autowired
     private BoardRepository boardRepository;
 
+    // 쿼리스트링은 문자열이라서 "0" 으로 표현
+    // localhost:8080?page=0
     @GetMapping({ "/", "/board" })
-    public String index() {
+    public String index(@RequestParam(defaultValue = "0") Integer page, HttpServletRequest request) {
+        // 1. 유효성 검사 X
+        // 2. 인증검사 X
+        List<Board> boardList = boardRepository.findAll(page);
+        System.out.println("테스트 : " + boardList.size());
+        System.out.println("테스트 : " + boardList.get(0).getTitle());
+
+        request.setAttribute("boardList", boardList);
+        request.setAttribute("prevPage", page - 1);
+        request.setAttribute("nextPage", page + 1);
+        request.setAttribute("first", page == 0 ? true : false);
+        request.setAttribute("last", false);
+
         return "index";
     }
 
@@ -58,7 +76,10 @@ public class BoardController {
     }
 
     @GetMapping("/board/{id}")
-    public String detailView(@PathVariable Integer id) {
+    public String detailView(@PathVariable Integer id, HttpServletRequest request) {
+        Board board = boardRepository.findbyId(id);
+        request.setAttribute("board", board);
+        request.setAttribute("userId", board.getUser().getUsername());
         return "board/detail";
     }
 

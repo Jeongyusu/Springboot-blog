@@ -7,11 +7,17 @@
     </div>
     <!-- 게시글내용 -->
     <div>
-        <h2><b>제목자리</b></h2>
+        {{#board}}
+        <h2><b>{{title}}</b></h2>
         <hr />
         <div class="m-4 p-2">
-            내용입니다
+            <div class="mb-3 mt-3 d-flex justify-content-end">
+              작성자 : {{userId}}
+            </div>
+            <div class="mb-3 mt-3">
+             {{content}}
         </div>
+        {{/board}}
     </div>
     <!-- 댓글 -->
     <div class="card mt-3">
