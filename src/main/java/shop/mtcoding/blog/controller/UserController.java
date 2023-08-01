@@ -35,7 +35,13 @@ public class UserController {
 
         }
 
-        UserRepository.save(joinDTO);
+        try {
+            UserRepository.save(joinDTO);
+        } catch (Exception e) {
+            return "redirect:/50x";
+
+        }
+
         return "redirect:/loginForm";
     }
 
