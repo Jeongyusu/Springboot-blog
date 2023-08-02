@@ -1,13 +1,15 @@
 {{> /layout/header}}
 <div class="container p-5">
     <!-- 수정삭제버튼 -->
+    {{#pageOwner}}
     <div class="mb-5 d-flex justify-content-end">
         <button class="btn btn-warning me-1">수정</button>
         <button class="btn btn-danger">삭제</button>
     </div>
+     {{/pageOwner}}
     <!-- 게시글내용 -->
+    {{#board}}
     <div>
-        {{#board}}
         <h2><b>{{title}}</b></h2>
         <hr />
         <div class="m-4 p-2">
@@ -17,8 +19,8 @@
             <div class="mb-3 mt-3">
              {{content}}
         </div>
-        {{/board}}
     </div>
+    {{/board}}
     <!-- 댓글 -->
     <div class="card mt-3">
         <!-- 댓글등록 -->

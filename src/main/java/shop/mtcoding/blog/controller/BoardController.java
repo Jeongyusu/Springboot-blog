@@ -86,9 +86,17 @@ public class BoardController {
     }
 
     @GetMapping("/board/{id}")
-    public String detailView(@PathVariable Integer id, HttpServletRequest request) {
+    public String detail(@PathVariable Integer id, HttpServletRequest request) {
+        User sessionUser = (User) session.getAttribute("sessionUser"); // 세션 접근
         Board board = boardRepository.findbyId(id);
+
+        boolean pageOwner = false;
+        if (sessionUser != null) {
+            pageOwner = sessionUser.getId() == board.getUser().getId();
+        }
+
         request.setAttribute("board", board);
+        request.setAttribute("pageOwner", pageOwner);
         request.setAttribute("userId", board.getUser().getUsername());
         return "board/detail";
     }

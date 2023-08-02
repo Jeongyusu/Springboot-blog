@@ -68,7 +68,7 @@ public class BoardRepository {
 
     }
 
-    public Board findbyId(int id) {
+    public Board findbyId(Integer id) {
         Query query = em.createNativeQuery("select * from board_tb where id = :id",
                 Board.class);
         query.setParameter("id", id);
