@@ -32,7 +32,15 @@ public class BoardController {
     public String index(@RequestParam(defaultValue = "0") Integer page, HttpServletRequest request) {
         // 1. 유효성 검사 X
         // 2. 인증검사 X
-        List<Board> boardList = boardRepository.findAll(page);
+        List<Board> boardList = boardRepository.findAll(page); // page = 1
+        int totalCount = boardRepository.count(); // totalCount = 5
+        int totalPage = totalCount / 3; // totalPage = 1
+        if (totalCount % 3 > 0) {
+            totalPage = totalPage + 1;
+            // totalPage = 2
+        }
+        boolean last = (totalPage - 1 == page);
+        ;
         System.out.println("테스트 : " + boardList.size());
         System.out.println("테스트 : " + boardList.get(0).getTitle());
 
@@ -41,6 +49,8 @@ public class BoardController {
         request.setAttribute("nextPage", page + 1);
         request.setAttribute("first", page == 0 ? true : false);
         request.setAttribute("last", false);
+        request.setAttribute("totpalPage", totalPage);
+        request.setAttribute("totalCount", totalCount);
 
         return "index";
     }
