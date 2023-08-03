@@ -127,7 +127,16 @@ public class UserController {
 
     @GetMapping("/user/updateForm")
     public String updateForm() {
+
         return "user/updateForm";
+    }
+
+    @PostMapping("/user/update")
+    public String update(String password) {
+
+        UserRepository.update(password);
+
+        return "redirect:/";
     }
 
 }
