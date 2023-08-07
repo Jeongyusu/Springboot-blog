@@ -4,9 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,10 +24,23 @@ import shop.mtcoding.blog.repository.UserRepository;
 public class UserController {
 
     @Autowired
-    private UserRepository UserRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private HttpSession session; // request는 가방, session은 서랍
+
+    // ResponseEntitiy<> ==> Responsebody를 안붙여도 <>타입의 데이터를 응답. HttpServletResponse
+    // 변수가 필요없음.
+    @GetMapping("/check")
+    public ResponseEntity<String> check(String username) {
+
+        User user = userRepository.findByUsername(username);
+        if (user != null) {
+            return new ResponseEntity<>("중복됨", HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("중복되지 않음", HttpStatus.OK);
+
+    }
 
     @ResponseBody
     @GetMapping("/test/login")
@@ -51,7 +67,7 @@ public class UserController {
 
         // 핵심기능
         try {
-            User user = UserRepository.findByUsernameAndPassword(loginDTO);
+            User user = userRepository.findByUsernameAndPassword(loginDTO);
             session.setAttribute("sessionUser", user);
             return "redirect:/";
 
@@ -63,27 +79,22 @@ public class UserController {
 
     @PostMapping("/join")
     public String join(JoinDTO joinDTO) {
-
+        // validation check (유효성 검사)
         if (joinDTO.getUsername() == null || joinDTO.getUsername().isEmpty()) {
             return "redirect:/40x";
-
         }
         if (joinDTO.getPassword() == null || joinDTO.getPassword().isEmpty()) {
             return "redirect:/40x";
-
         }
         if (joinDTO.getEmail() == null || joinDTO.getEmail().isEmpty()) {
             return "redirect:/40x";
-
         }
-
-        try {
-            UserRepository.save(joinDTO);
-        } catch (Exception e) {
+        // DB에 해당 username이 있는지 체크해보기
+        User user = userRepository.findByUsername(joinDTO.getUsername());
+        if (user != null) {
             return "redirect:/50x";
-
         }
-
+        userRepository.save(joinDTO); // 핵심 기능
         return "redirect:/loginForm";
     }
 
@@ -134,7 +145,7 @@ public class UserController {
     @PostMapping("/user/update")
     public String update(String password) {
 
-        UserRepository.update(password);
+        userRepository.update(password);
 
         return "redirect:/";
     }
