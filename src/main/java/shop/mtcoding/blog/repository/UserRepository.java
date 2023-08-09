@@ -3,12 +3,14 @@ package shop.mtcoding.blog.repository;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import shop.mtcoding.blog.dto.JoinDTO;
 import shop.mtcoding.blog.dto.LoginDTO;
+import shop.mtcoding.blog.dto.UserUpdateDTO;
 import shop.mtcoding.blog.model.User;
 
 // BoardController, UserController, UserRepository
@@ -39,6 +41,15 @@ public class UserRepository {
         return (User) query.getSingleResult();
     }
 
+    public User findByUsername(LoginDTO loginDTO) {
+        Query query = em.createNativeQuery("select * from user_tb where username=:username",
+                User.class);
+        query.setParameter("username", loginDTO.getUsername());
+        return (User) query.getSingleResult();
+    }
+
+    // String encPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
     @Transactional
     public void save(JoinDTO joinDTO) {
         System.out.println("테스트 :" + 1);
@@ -47,7 +58,7 @@ public class UserRepository {
                         "insert into user_tb(username, password, email) values(:username, :password, :email)");
         System.out.println("테스트 :" + 2);
         query.setParameter("username", joinDTO.getUsername());
-        query.setParameter("password", joinDTO.getPassword());
+        query.setParameter("password", BCrypt.hashpw(joinDTO.getPassword(), BCrypt.gensalt()));
         query.setParameter("email", joinDTO.getEmail());
         System.out.println("테스트 :" + 3);
         query.executeUpdate(); // 쿼리를 전송 (DBMS)
@@ -55,9 +66,9 @@ public class UserRepository {
     }
 
     @Transactional
-    public void update(String password) {
-        Query query = em.createNativeQuery("update user_tb set password = :password", User.class);
-        query.setParameter("password", password);
+    public void update(UserUpdateDTO userUpdateDTO) {
+        Query query = em.createNativeQuery("update user_tb set password = :password where id = :id");
+        query.setParameter("password", BCrypt.hashpw(userUpdateDTO.getPassword(), BCrypt.gensalt()));
         query.executeUpdate();
     }
 }

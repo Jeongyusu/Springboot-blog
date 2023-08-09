@@ -3,6 +3,7 @@ package shop.mtcoding.blog.controller;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import shop.mtcoding.blog.dto.JoinDTO;
 import shop.mtcoding.blog.dto.LoginDTO;
+import shop.mtcoding.blog.dto.UserUpdateDTO;
 import shop.mtcoding.blog.model.User;
 import shop.mtcoding.blog.repository.UserRepository;
 
@@ -48,11 +50,21 @@ public class UserController {
         // 핵심 기능
         // System.out.println("테스트 : username : " + loginDTO.getUsername());
         // System.out.println("테스트 : password : " + loginDTO.getPassword());
+        // String encPassword = BCrypt.hashpw("loginDTO.getPassword()",
+        // BCrypt.gensalt());
+        // boolean isValid =
+        // BCrypt.checkpw("loginDTO.getPassword()",user.getPassword());
 
         try {
-            User user = userRepository.findByUsernameAndPassword(loginDTO);
-            session.setAttribute("sessionUser", user);
-            return "redirect:/";
+            User user = userRepository.findByUsername(loginDTO.getUsername());
+            if (BCrypt.checkpw(loginDTO.getPassword(), user.getPassword())) {
+                // User user = userRepository.findByUsernameAndPassword(loginDTO);
+                session.setAttribute("sessionUser", user);
+                return "redirect:/";
+            } else {
+                return "redirect:/40x";
+            }
+
         } catch (Exception e) {
             return "redirect:/exLogin";
         }
@@ -110,9 +122,9 @@ public class UserController {
     }
 
     @PostMapping("/user/update")
-    public String update(String password) {
+    public String update(UserUpdateDTO userUpdateDTO) {
 
-        userRepository.update(password);
+        userRepository.update(userUpdateDTO);
 
         return "redirect:/";
     }
