@@ -109,6 +109,14 @@ public class UserController {
         return "redirect:/";
     }
 
+    @PostMapping("/user/update")
+    public String update(String password) {
+
+        userRepository.update(password);
+
+        return "redirect:/";
+    }
+
     // 정상인
     // @PostMapping("/join")
     // public String join(String username, String password, String email) {

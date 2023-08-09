@@ -53,4 +53,11 @@ public class UserRepository {
         query.executeUpdate(); // 쿼리를 전송 (DBMS)
         System.out.println("테스트 :" + 4);
     }
+
+    @Transactional
+    public void update(String password) {
+        Query query = em.createNativeQuery("update user_tb set password = :password", User.class);
+        query.setParameter("password", password);
+        query.executeUpdate();
+    }
 }
