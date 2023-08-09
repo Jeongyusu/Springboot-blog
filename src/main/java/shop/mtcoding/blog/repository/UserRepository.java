@@ -11,8 +11,8 @@ import shop.mtcoding.blog.dto.JoinDTO;
 import shop.mtcoding.blog.dto.LoginDTO;
 import shop.mtcoding.blog.model.User;
 
-// BoardController, UserController, UserRepository - 우리가 띄운 것
-// EntitiyManager, HttpSession - spring이 띄운 것
+// BoardController, UserController, UserRepository
+// EntityManager, HttpSession
 @Repository
 public class UserRepository {
 
@@ -28,9 +28,9 @@ public class UserRepository {
         } catch (Exception e) {
             return null;
         }
+
     }
 
-    // User는 mt코딩~ 쪽으로 선택
     public User findByUsernameAndPassword(LoginDTO loginDTO) {
         Query query = em.createNativeQuery("select * from user_tb where username=:username and password=:password",
                 User.class);
@@ -41,24 +41,16 @@ public class UserRepository {
 
     @Transactional
     public void save(JoinDTO joinDTO) {
-        System.out.println("테스트: " + 1);
-        Query query = em.createNativeQuery(
-                "insert into user_tb(username, password, email) values(:username, :password, :email)");
-        System.out.println("테스트: " + 2);
+        System.out.println("테스트 :" + 1);
+        Query query = em
+                .createNativeQuery(
+                        "insert into user_tb(username, password, email) values(:username, :password, :email)");
+        System.out.println("테스트 :" + 2);
         query.setParameter("username", joinDTO.getUsername());
         query.setParameter("password", joinDTO.getPassword());
         query.setParameter("email", joinDTO.getEmail());
-        System.out.println("테스트: " + 3); // 쿼리 전송 (DBMS)
-        query.executeUpdate();
-        System.out.println("테스트: " + 4);
-
+        System.out.println("테스트 :" + 3);
+        query.executeUpdate(); // 쿼리를 전송 (DBMS)
+        System.out.println("테스트 :" + 4);
     }
-
-    @Transactional
-    public void update(String password) {
-        Query query = em.createNativeQuery("update user_tb set password = :password", User.class);
-        query.setParameter("password", password);
-        query.executeUpdate();
-    }
-
 }

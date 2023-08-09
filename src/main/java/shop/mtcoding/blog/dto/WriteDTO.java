@@ -9,8 +9,7 @@ import lombok.Setter;
  * 2. method : POST
  * 3. 요청 body : title=값(String)&content=값(String)
  * 4. MIME타입 : x-www-form-urlencoded
- * 5. 응답 : view를 응답. index페이지
- * 
+ * 5. 응답 : view(html)를 응답함. index 페이지
  */
 
 @Getter
@@ -18,5 +17,4 @@ import lombok.Setter;
 public class WriteDTO {
     private String title;
     private String content;
-
 }

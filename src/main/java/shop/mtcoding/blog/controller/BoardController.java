@@ -11,12 +11,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
+import shop.mtcoding.blog.dto.BoardDetailDTO;
 import shop.mtcoding.blog.dto.UpdateDTO;
 import shop.mtcoding.blog.dto.WriteDTO;
 import shop.mtcoding.blog.model.Board;
+import shop.mtcoding.blog.model.Reply;
 import shop.mtcoding.blog.model.User;
 import shop.mtcoding.blog.repository.BoardRepository;
+import shop.mtcoding.blog.repository.ReplyRepository;
 
 @Controller
 public class BoardController {
@@ -27,61 +31,79 @@ public class BoardController {
     @Autowired
     private BoardRepository boardRepository;
 
-    @PostMapping("/board/{id}/update") // form이 없으면 업데이트하겟다는 것
-    public String update(@PathVariable Integer id, UpdateDTO updateDTO) {
-        // 1. 인증검사
+    @Autowired
+    private ReplyRepository replyRepository;
 
-        // 2. 권한체크
-
-        // 3. 핵심 로직
-        // update board_tb set title = :title, content = :content where id = :id
-        boardRepository.update(id, updateDTO);
-
-        return "redirect:/board/" + id;
-
+    @ResponseBody
+    @GetMapping("/test/reply")
+    public List<Reply> test2() {
+        List<Reply> replys = replyRepository.findByBoardId(1);
+        return replys;
     }
 
-    @GetMapping("/board/{id}/updateForm") // form이 있으면 달라는 것
-    public String updateForm(@PathVariable Integer id, HttpServletRequest request) {
-        // 1. 인증검사
+    @ResponseBody
+    @GetMapping("/test/board/1")
+    public Board test() {
+        Board board = boardRepository.findById(1);
+        return board;
+    }
+
+    @PostMapping("/board/{id}/update")
+    public String update(@PathVariable Integer id, UpdateDTO updateDTO) {
+        // 1. 인증 검사
 
         // 2. 권한 체크
 
         // 3. 핵심 로직
-        Board board = boardRepository.findbyId(id);
+        // update board_tb set title = :title, content = :content where id = :id
+        boardRepository.update(updateDTO, id);
+
+        return "redirect:/board/" + id;
+    }
+
+    @GetMapping("/board/{id}/updateForm")
+    public String updateForm(@PathVariable Integer id, HttpServletRequest request) {
+        // 1. 인증 검사
+
+        // 2. 권한 체크
+
+        // 3. 핵심 로직
+        Board board = boardRepository.findById(id);
         request.setAttribute("board", board);
+
         return "board/updateForm";
     }
 
     @PostMapping("/board/{id}/delete")
-    public String delete(@PathVariable Integer id) { // 1.Pathvariable 값 받기
-        // 2.인증검사 (로그인 페이지 보내기)
-        // ssession에 접근해서 ssesionUser 키 값을 가져오세요
-        // null이면, 로그인 페이지로 보내고
+    public String delete(@PathVariable Integer id) { // 1. PathVariable 값 받기
+        // 2.인증검사
+        // session에 접근해서 sessionUser 키값을 가져오세요
+        // null 이면, 로그인페이지로 보내고
         // null 아니면, 3번을 실행하세요.
-        // * 유효성 검사 X(바디데이터 없음)
-        // 3. 권한검사
-        // 4. 모델에 접근해서 삭제
-        // boardRepository.deleteById(id); 호출하세요 -> 리턴을 받지마세요
-        // delete from board_tb where id = :id
         User sessionUser = (User) session.getAttribute("sessionUser");
         if (sessionUser == null) {
             return "redirect:/loginForm"; // 401
         }
-        Board board = boardRepository.findbyId(id);
-        if (sessionUser.getId() != board.getUser().getId()) {
-            return "redirect:/40x";
-        }
-        boardRepository.deleteById(id);
-        return "redirect:/";
 
+        // 3. 권한검사
+        Board board = boardRepository.findById(id);
+        if (board.getUser().getId() != sessionUser.getId()) {
+            return "redirect:/40x"; // 403 권한없음
+        }
+
+        // 4. 모델에 접근해서 삭제
+        // boardRepository.deleteById(id); 호출하세요 -> 리턴을 받지 마세요
+        // delete from board_tb where id = :id
+        boardRepository.deleteById(id);
+
+        return "redirect:/";
     }
 
-    // 쿼리스트링은 문자열이라서 "0" 으로 표현
-    // localhost:8080?page=0
+    // http://localhost:8080?num=4
     @GetMapping({ "/", "/board" })
     public String index(
-            @RequestParam(defaultValue = "0") Integer page, HttpServletRequest request) {
+            @RequestParam(defaultValue = "0") Integer page,
+            HttpServletRequest request) {
         // 1. 유효성 검사 X
         // 2. 인증검사 X
 
@@ -111,14 +133,14 @@ public class BoardController {
 
     @PostMapping("/board/save")
     public String save(WriteDTO writeDTO) {
+        // validation check (유효성 검사)
         if (writeDTO.getTitle() == null || writeDTO.getTitle().isEmpty()) {
             return "redirect:/40x";
-
         }
         if (writeDTO.getContent() == null || writeDTO.getContent().isEmpty()) {
             return "redirect:/40x";
-
         }
+
         // 인증체크
         User sessionUser = (User) session.getAttribute("sessionUser");
         if (sessionUser == null) {
@@ -127,7 +149,6 @@ public class BoardController {
 
         boardRepository.save(writeDTO, sessionUser.getId());
         return "redirect:/";
-
     }
 
     @GetMapping("/board/saveForm")
@@ -139,20 +160,29 @@ public class BoardController {
         return "board/saveForm";
     }
 
+    // localhost:8080/board/1
+    // localhost:8080/board/50
     @GetMapping("/board/{id}")
-    public String detail(@PathVariable Integer id, HttpServletRequest request) {
-        User sessionUser = (User) session.getAttribute("sessionUser"); // 세션 접근
-        Board board = boardRepository.findbyId(id);
+    public String detail(@PathVariable Integer id, HttpServletRequest request) { // C
+        User sessionUser = (User) session.getAttribute("sessionUser"); // 세션접근
+        List<BoardDetailDTO> dtos = null;
+        if (sessionUser == null) {
+            dtos = boardRepository.findByIdJoinReply(id, null);
+        } else {
+            dtos = boardRepository.findByIdJoinReply(id, sessionUser.getId());
+        }
 
         boolean pageOwner = false;
         if (sessionUser != null) {
-            pageOwner = sessionUser.getId() == board.getUser().getId();
+            // System.out.println("테스트 세션 ID : " + sessionUser.getId());
+            // System.out.println("테스트 세션 board.getUser().getId() : " +
+            // board.getUser().getId());
+            pageOwner = sessionUser.getId() == dtos.get(0).getBoardUserId();
+            // System.out.println("테스트 : pageOwner : " + pageOwner);
         }
 
-        request.setAttribute("board", board);
+        request.setAttribute("dtos", dtos);
         request.setAttribute("pageOwner", pageOwner);
-        request.setAttribute("userId", board.getUser().getUsername());
-        return "board/detail";
+        return "board/detail"; // V
     }
-
 }
