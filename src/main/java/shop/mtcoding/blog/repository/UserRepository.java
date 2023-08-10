@@ -68,7 +68,8 @@ public class UserRepository {
     @Transactional
     public void update(UserUpdateDTO userUpdateDTO) {
         Query query = em.createNativeQuery("update user_tb set password = :password where id = :id");
-        query.setParameter("password", BCrypt.hashpw(userUpdateDTO.getPassword(), BCrypt.gensalt()));
+        query.setParameter("password", userUpdateDTO.getPassword());
+        query.setParameter("id", userUpdateDTO.getUserId());
         query.executeUpdate();
     }
 }

@@ -1,5 +1,6 @@
 package shop.mtcoding.blog.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
@@ -62,7 +63,7 @@ public class UserController {
                 session.setAttribute("sessionUser", user);
                 return "redirect:/";
             } else {
-                return "redirect:/40x";
+                return "redirect:/loginForm";
             }
 
         } catch (Exception e) {
@@ -90,6 +91,7 @@ public class UserController {
         if (user != null) {
             return "redirect:/50x";
         }
+
         userRepository.save(joinDTO); // 핵심 기능
         return "redirect:/loginForm";
     }
@@ -111,7 +113,25 @@ public class UserController {
     }
 
     @GetMapping("/user/updateForm")
-    public String updateForm() {
+    public String updateForm(HttpServletRequest request) {
+        // User user = (User) session.getAttribute("ssessionUser");
+        // if (user != null) {
+        // return "redirect:/50x";
+        // }
+        // User sessionUseruser =
+        // userRepository.findByUsername(sessionUser.getUsername());
+        // request.setAttribute("user", user);
+
+        // return "user/updateForm";
+
+        User sessionUser = (User) session.getAttribute("sessionUser");
+        if (sessionUser == null) {
+            return "redirect:/loginForm"; // 401
+        }
+
+        User user = userRepository.findByUsername(sessionUser.getUsername());
+        request.setAttribute("user", user);
+
         return "user/updateForm";
     }
 
@@ -124,6 +144,8 @@ public class UserController {
     @PostMapping("/user/update")
     public String update(UserUpdateDTO userUpdateDTO) {
 
+        String encPassword = BCrypt.hashpw(userUpdateDTO.getPassword(), BCrypt.gensalt());
+        userUpdateDTO.setPassword(encPassword);
         userRepository.update(userUpdateDTO);
 
         return "redirect:/";

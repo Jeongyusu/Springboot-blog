@@ -18,6 +18,8 @@ import shop.mtcoding.blog.repository.ReplyRepository;
 @Controller
 public class ReplyController {
 
+    private static final String TAG = "ReplyController : ";
+
     @Autowired
     private HttpSession session;
 

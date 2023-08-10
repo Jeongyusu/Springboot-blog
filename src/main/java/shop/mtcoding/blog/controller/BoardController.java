@@ -42,6 +42,13 @@ public class BoardController {
     }
 
     @ResponseBody
+    @GetMapping("/test/count")
+    public String testCount() {
+        List<Board> title = boardRepository.findAll(0, "제");
+        return "" + title;
+    }
+
+    @ResponseBody
     @GetMapping("/test/board/1")
     public Board test() {
         Board board = boardRepository.findById(1);
@@ -102,13 +109,28 @@ public class BoardController {
     // http://localhost:8080?num=4
     @GetMapping({ "/", "/board" })
     public String index(
+            @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") Integer page,
             HttpServletRequest request) {
         // 1. 유효성 검사 X
         // 2. 인증검사 X
+        List<Board> boardList = null;
+        int totalCount = 0;
+        request.setAttribute("keyword", keyword);
 
-        List<Board> boardList = boardRepository.findAll(page); // page = 1
-        int totalCount = boardRepository.count(); // totalCount = 5
+        if (keyword.isBlank()) {
+            boardList = boardRepository.findAll(page);
+            totalCount = boardRepository.count();
+
+        } else {
+            // request.setAttribute("keyword", keyword);
+            boardList = boardRepository.findAll(page, keyword);
+            totalCount = boardRepository.count(keyword);
+
+        }
+
+        // List<Board> boardList = boardRepository.findAll(page); // page = 1
+        // int totalCount = boardRepository.count(); // totalCount = 5
 
         // System.out.println("테스트 : totalCount :" + totalCount);
         int totalPage = totalCount / 3; // totalPage = 1
@@ -127,6 +149,7 @@ public class BoardController {
         request.setAttribute("last", last);
         request.setAttribute("totalPage", totalPage);
         request.setAttribute("totalCount", totalCount);
+        request.setAttribute("keyword", keyword);
 
         return "index";
     }
